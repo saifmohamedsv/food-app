@@ -1,26 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import yelp from "../axios/yelp";
+import useRestaurants from "../hooks/useRestaurants";
+import ResultsList from "../components/ResultsList";
 
 const Search = () => {
   const [term, setTerm] = useState("");
-  const [results, setResults] = useState([]);
-  const [error, setError] = useState("");
+  const [searchApi, results, error] = useRestaurants();
 
-  const onTermSubmit = async () => {
-    try {
-      const { data } = await yelp.get("/search", {
-        params: {
-          limit: 50,
-          term,
-          location: "newyork",
-        },
-      });
-      setResults(data.businesses);
-    } catch (error) {
-      setError("Something Went Wrong, please try again later.");
-    }
+  const filterResultsByPrice = (price) => {
+    return results?.filter((item) => item.price === price);
   };
 
   return (
@@ -28,9 +17,20 @@ const Search = () => {
       <SearchBar
         searchTerm={term}
         onTermChange={(newValue) => setTerm(newValue)}
-        onTermSubmit={onTermSubmit}
+        onTermSubmit={() => searchApi(term)}
       />
-      <Text>{error}</Text>
+      <ResultsList
+        restaurants={filterResultsByPrice("$")}
+        title="Cost Effective"
+      />
+      <ResultsList
+        restaurants={filterResultsByPrice("$$")}
+        title="Bit Pricer"
+      />
+      <ResultsList
+        restaurants={filterResultsByPrice("$$$")}
+        title="Big spender"
+      />
     </View>
   );
 };
